@@ -7,7 +7,9 @@ const Professores = require('./models/Professores')
 const Agendamentos = require('./models/Agendamentos')
 
 const cors = require('cors')
-const { where } = require('sequelize')
+const { where, Model } = require('sequelize')
+
+const Sequelize = require('sequelize')
 
 app.use(cors())
 app.use(express.json())
@@ -145,11 +147,42 @@ app.post('/criar-agendamento', async (req, res) => {
             mensagem: "Agendamento feito com sucesso!",
         });
     }).catch(() => {
-            return res.status(400).json({
-                erro: true,
-                mensagem: "Erro: Agendamento não foi efetuado com sucesso!",
-            });
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Agendamento não foi efetuado com sucesso!",
         });
+    });
+})
+
+app.get('/agendamentos', async (req, res) => {
+    await Agendamentos.findAll().then((data) => {
+        return res.json({
+            erro: false,
+            data
+        })
+    }).catch(() => {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "erro ao buscar dados",
+        });
+    });
+})
+
+app.get('/agendamentos/professor/:id', async (req, res) => {
+    await Professores.findAll({
+        where: { id: req.params.id },
+        include: [{ model: Agendamentos }]
+    }).then((data) => {
+        return res.json({
+            erro: false,
+            data
+        })
+    }).catch(() => {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "erro ao buscar dados",
+        });
+    });
 })
 
 app.listen(8080, () => { console.log('rodando') })
