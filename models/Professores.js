@@ -30,7 +30,8 @@ Professores.hasMany(Agendamentos, {
     },
     onDelete: 'CASCADE',
   });
+//           
 // Professores.sync();
-// Professores.sync({ alter: true })
+Professores.sync({ alter: true })
 
 module.exports = Professores

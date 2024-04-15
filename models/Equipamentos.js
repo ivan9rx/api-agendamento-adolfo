@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('./db')
-const Agendamentos = require('./Agendamentos')
+
 
 const Equipamentos = db.define('equipamentos', {
     id: {
@@ -19,13 +19,15 @@ const Equipamentos = db.define('equipamentos', {
     }
 })
 
-Equipamentos.hasMany(Agendamentos, {
-    foreignKey: {
-      name: 'equipamentoId',
-      allowNull: false,
-    },
-    onDelete: 'CASCADE',
-  });
+// Equipamentos.hasMany(Agendamentos, {
+//     foreignKey: {
+//       name: 'equipamentoId',
+//       allowNull: false,
+//     },
+//     onDelete: 'CASCADE',
+//   });
+
+
 
 // Equipamentos.sync({ alter: true })
 // Equipamentos.sync();

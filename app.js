@@ -169,20 +169,23 @@ app.get('/agendamentos', async (req, res) => {
 })
 
 app.get('/agendamentos/professor/:id', async (req, res) => {
-    await Professores.findAll({
-        where: { id: req.params.id },
-        include: [{ model: Agendamentos }]
-    }).then((data) => {
-        return res.json({
-            erro: false,
-            data
-        })
-    }).catch(() => {
-        return res.status(400).json({
-            erro: true,
-            mensagem: "erro ao buscar dados",
-        });
-    });
+
+    const agendamentoEquipamento = await Agendamentos.findAll({ where: {professorId: req.params.id},  include: [{ model: Equipamentos }]})
+     return res.json(agendamentoEquipamento)
+    // await Professores.findAll({
+    //     where: { id: req.params.id },
+    //     include: [{ model: Agendamentos }]
+    // }).then((data) => {
+    //     return res.json({
+    //         erro: false,
+    //         data
+    //     })
+    // }).catch(() => {
+    //     return res.status(400).json({
+    //         erro: true,
+    //         mensagem: "erro ao buscar dados",
+    //     });
+    // });
 })
 
 app.listen(8080, () => { console.log('rodando') })
