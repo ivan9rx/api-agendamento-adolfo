@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('./db')
 const Equipamentos = require('./Equipamentos')
+const Professores = require('./Professores')
 
 const Agendamentos = db.define('agendamentos', {
     Id: {
@@ -29,7 +30,18 @@ const Agendamentos = db.define('agendamentos', {
     },
 })
 
-Agendamentos.belongsTo(Equipamentos, {foreignKey: 'equipamentoId', allowNull:false})
+Agendamentos.belongsTo(Equipamentos, {
+    foreignKey: 'equipamentoId',
+    allowNull: false,
+    onDelete: 'CASCADE'
+});
+
+Agendamentos.belongsTo(Professores, {
+    foreignKey: 'professorId',
+    allowNull: false,
+    onDelete: 'CASCADE'
+});
+
 
 
 // Professores.hasOne(Agendamentos, {
@@ -37,6 +49,6 @@ Agendamentos.belongsTo(Equipamentos, {foreignKey: 'equipamentoId', allowNull:fal
 //     onUpdate: 'CASCADE',
 // });
 // Agendamentos.sync();
-Agendamentos.sync({ alter: true })
+// Agendamentos.sync({ alter: true })
 
 module.exports = Agendamentos

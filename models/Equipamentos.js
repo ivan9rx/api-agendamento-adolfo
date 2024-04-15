@@ -31,6 +31,6 @@ const Equipamentos = db.define('equipamentos', {
 
 // Equipamentos.sync({ alter: true })
 // Equipamentos.sync();
-// Equipamentos.sync({ alter: true })
+Equipamentos.sync({ alter: true })
 
 module.exports = Equipamentos
