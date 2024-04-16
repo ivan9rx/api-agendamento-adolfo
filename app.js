@@ -34,18 +34,30 @@ app.get('/list-equipamentos', async (req, res) => {
 })
 
 app.post('/cad-equipamento', async (req, res) => {
+    // Verifique se já existe um equipamento com o mesmo nome
+    const existingEquipamento = await Equipamentos.findOne({ where: { nome: req.body.nome } });
+    if (existingEquipamento) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Já existe um equipamento cadastrado com este nome!",
+        });
+    }
+
+    // Se não existir, crie um novo equipamento
     await Equipamentos.create(req.body).then(() => {
         return res.json({
             erro: false,
             mensagem: "Equipamento cadastrado com sucesso!",
         });
-    }).catch(() => {
-        return res.status(400).json({
-            erro: true,
-            mensagem: "Erro: Equipamento não cadastrado com sucesso!",
+    })
+        .catch(() => {
+            return res.status(400).json({
+                erro: true,
+                mensagem: "Erro: Equipamento não cadastrado com sucesso!",
+            });
         });
-    });
-})
+});
+
 
 app.put('/edit-equipamento/:id', async (req, res) => {
     await Equipamentos.update(req.body, { where: { 'id': req.params.id } }).then(() => {
@@ -93,21 +105,31 @@ app.get('/list-professores', async (req, res) => {
     });
 
 })
-
 app.post('/cad-professor', async (req, res) => {
+    // Verifique se já existe um professor com o mesmo e-mail
+    const existingProfessor = await Professores.findOne({ where: { email: req.body.email } });
+    if (existingProfessor) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Já existe um professor cadastrado com este e-mail!",
+        });
+    }
+
+    // Se não existir, crie um novo professor
     await Professores.create(req.body).then(() => {
         return res.json({
             erro: false,
-            mensagem: "professor cadastrado com sucesso!",
+            mensagem: "Professor cadastrado com sucesso!",
         });
     })
         .catch(() => {
             return res.status(400).json({
                 erro: true,
-                mensagem: "Erro: professor não cadastrado com sucesso!",
+                mensagem: "Erro: Professor não cadastrado com sucesso!",
             });
         });
-})
+});
+
 
 app.put('/edit-professor/:id', async (req, res) => {
     await Professores.update(req.body, { where: { 'id': req.params.id } }).then(() => {
@@ -141,18 +163,30 @@ app.delete('/delete-professor/:id', async (req, res) => {
 
 
 app.post('/criar-agendamento', async (req, res) => {
+    // Verifique se já existe um agendamento com a mesma data e horário
+    const existingAgendamento = await Agendamentos.findOne({ where: { data: req.body.data, aula: req.body.aula } });
+    if (existingAgendamento) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Já existe um agendamento para esta data e horário!",
+        });
+    }
+
+    // Se não existir, crie um novo agendamento
     await Agendamentos.create(req.body).then(() => {
         return res.json({
             erro: false,
             mensagem: "Agendamento feito com sucesso!",
         });
-    }).catch(() => {
-        return res.status(400).json({
-            erro: true,
-            mensagem: "Erro: Agendamento não foi efetuado com sucesso!",
+    })
+        .catch(() => {
+            return res.status(400).json({
+                erro: true,
+                mensagem: "Erro: Agendamento não foi efetuado com sucesso!",
+            });
         });
-    });
-})
+});
+
 
 app.get('/agendamentos', async (req, res) => {
     await Agendamentos.findAll().then((data) => {
@@ -170,8 +204,8 @@ app.get('/agendamentos', async (req, res) => {
 
 app.get('/agendamentos/professor/:id', async (req, res) => {
 
-    const agendamentoEquipamento = await Agendamentos.findAll({ where: {professorId: req.params.id},  include: [{ model: Equipamentos }]})
-     return res.json(agendamentoEquipamento)
+    const agendamentoEquipamento = await Agendamentos.findAll({ where: { professorId: req.params.id }, include: [{ model: Equipamentos }] })
+    return res.json(agendamentoEquipamento)
     // await Professores.findAll({
     //     where: { id: req.params.id },
     //     include: [{ model: Agendamentos }]

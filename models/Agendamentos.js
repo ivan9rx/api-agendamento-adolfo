@@ -18,6 +18,14 @@ const Agendamentos = db.define('agendamentos', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
+    data: {
+        type: Sequelize.DATEONLY,
+        allowNull: false
+    },
+    aula: {
+        type: Sequelize.INTEGER,
+        allowNull:false
+    },
     finished: {
         type: Sequelize.TINYINT(1),
         allowNull: false,
@@ -50,5 +58,6 @@ Agendamentos.belongsTo(Professores, {
 // });
 // Agendamentos.sync();
 // Agendamentos.sync({ alter: true })
+// Agendamentos.sync({ force: true })
 
 module.exports = Agendamentos
