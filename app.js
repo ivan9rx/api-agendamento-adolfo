@@ -176,7 +176,7 @@ app.post('/criar-agendamento', async (req, res) => {
     await Agendamentos.create(req.body).then(() => {
         return res.json({
             erro: false,
-            mensagem: "Agendamento feito com sucesso!",
+            mensagem: "Agendamento efetuado com sucesso!",
         });
     })
         .catch(() => {
@@ -190,17 +190,24 @@ app.post('/criar-agendamento', async (req, res) => {
 
 app.get('/agendamentos', async (req, res) => {
     await Agendamentos.findAll().then((data) => {
-        return res.json({
-            erro: false,
-            data
-        })
+        if (data.length === 0) {
+            return res.status(404).json({
+                mensagem: "Nenhum agendamento encontrado",
+            });
+        } else {
+            return res.json({
+                erro: false,
+                data
+            });
+        }
     }).catch(() => {
         return res.status(400).json({
             erro: true,
-            mensagem: "erro ao buscar dados",
+            mensagem: "Erro ao buscar dados",
         });
     });
-})
+});
+
 
 app.get('/agendamentos/professor/:id', async (req, res) => {
 
