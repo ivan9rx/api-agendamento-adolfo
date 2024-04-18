@@ -24,7 +24,7 @@ const Agendamentos = db.define('agendamentos', {
     },
     aula: {
         type: Sequelize.INTEGER,
-        allowNull:false
+        allowNull: false
     },
     finished: {
         type: Sequelize.TINYINT(1),
@@ -49,6 +49,16 @@ Agendamentos.belongsTo(Professores, {
     allowNull: false,
     onDelete: 'CASCADE'
 });
+
+Agendamentos.afterCreate((agendamento, options) => {
+    Equipamentos.findByPk(agendamento.equipamentoId)
+        .then(equipamento => {
+            equipamento.quantidade -= 1;
+            return equipamento.save();
+        })
+        .catch(err => console.log(err));
+});
+
 
 
 
