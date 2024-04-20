@@ -1,6 +1,8 @@
 const express = require('express')
 const app = express()
 const db = require('./models/db')
+require('dotenv').config()
+
 
 const Equipamentos = require('./models/Equipamentos')
 const Professores = require('./models/Professores')
@@ -10,11 +12,95 @@ const cors = require('cors')
 const { where, Model } = require('sequelize')
 
 const Sequelize = require('sequelize')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 app.use(cors())
 app.use(express.json())
 
 
+//rota privada
+app.get('/professor/:id', checkToken, async (req, res) => {
+    const id = req.params.id
+
+    const professor = await Professores.findByPk(id, {
+        attributes: { exclude: ['password'] }
+    });
+
+
+    if (!professor) {
+        return res.status(400).json({ msg: "professor não encontrado" })
+    }
+
+    res.status(200).json(professor)
+})
+
+function checkToken (req, res, next) {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(" ")[1]
+
+    if(!token) {
+        return res.status(401).json({msg:"acesso negado"})
+    }
+
+    try {
+        
+        const secret = process.env.SECRET
+
+        jwt.verify(token, secret)
+
+        next()
+
+
+    } catch (error) {
+        res.status(400).json({msg:"token invalido"})
+    }
+}
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body
+    if (!email || !password) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Todos os campos devem ser preenchidos!",
+        });
+    }
+
+    const professor = await Professores.findOne({ where: { email: req.body.email } });
+    if (!professor) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Email ou senha incorretos",
+        });
+    }
+
+    const checkPassword = await bcrypt.compare(password, professor.password)
+
+    if (!checkPassword) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Email ou senha incorretos",
+        });
+    }
+
+    try {
+        const secret = process.env.SECRET
+
+        const token = jwt.sign({
+            id: professor.id
+        }, secret
+        )
+
+        res.status(200).json({ msg: "professor autenticado com sucesso", token })
+
+    } catch (err) {
+        console.log(err)
+
+        return res.status(500).json({
+            msg: "ocorreu um erro no servidor"
+        })
+    }
+})
 
 
 app.get('/list-equipamentos', async (req, res) => {
@@ -133,11 +219,18 @@ app.post('/cad-professor', async (req, res) => {
         });
     }
 
+    //cria a senha
+    const salt = await bcrypt.genSalt(15)
+    const passwordHash = await bcrypt.hash(password, salt)
+
+    req.body.password = passwordHash
+
     // Se não existir, crie um novo professor
     await Professores.create(req.body).then(() => {
         return res.json({
             erro: false,
             mensagem: "Professor cadastrado com sucesso!",
+            professor: req.body
         });
     })
         .catch(() => {
