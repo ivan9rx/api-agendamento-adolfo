@@ -3,6 +3,21 @@ const app = express()
 const db = require('./models/db')
 require('dotenv').config()
 
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // Adiciona a extensão do arquivo
+    }
+});
+
+const upload = multer({ storage: storage });
+app.use('/uploads', express.static('uploads'));
+
 
 const Equipamentos = require('./models/Equipamentos')
 const Professores = require('./models/Professores')
@@ -17,6 +32,7 @@ const bcrypt = require('bcrypt')
 
 app.use(cors())
 app.use(express.json())
+
 
 
 //rota privada
@@ -35,16 +51,16 @@ app.get('/professor/:id', checkToken, async (req, res) => {
     res.status(200).json(professor)
 })
 
-function checkToken (req, res, next) {
+function checkToken(req, res, next) {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(" ")[1]
 
-    if(!token) {
-        return res.status(401).json({msg:"acesso negado"})
+    if (!token) {
+        return res.status(401).json({ msg: "acesso negado" })
     }
 
     try {
-        
+
         const secret = process.env.SECRET
 
         jwt.verify(token, secret)
@@ -53,7 +69,7 @@ function checkToken (req, res, next) {
 
 
     } catch (error) {
-        res.status(400).json({msg:"token invalido"})
+        res.status(400).json({ msg: "token invalido" })
     }
 }
 
@@ -177,21 +193,34 @@ app.delete('/delete-equipamento/:id', async (req, res) => {
 
 
 app.get('/list-professores', async (req, res) => {
-
     await Professores.findAll().then((data) => {
+        // Verifique se os dados existem antes de tentar mapeá-los
+        if (!data) {
+            return res.status(400).json({
+                erro: true,
+                mensagem: "Erro: Não há dados para mapear!",
+            });
+        }
+
+        // Modifique os objetos de professor para incluir a URL da imagem
+        const professores = data.map(professor => ({
+            ...professor.dataValues,
+            foto: professor.foto
+        }));
+
         return res.json({
             erro: false,
-            data
-        })
+            professores
+        });
     }).catch(() => {
         return res.status(400).json({
             erro: true,
-            mensagem: "erro ao buscar dados",
+            mensagem: "Erro ao buscar dados",
         });
     });
+});
 
-})
-app.post('/cad-professor', async (req, res) => {
+app.post('/cad-professor', upload.single('foto'), async (req, res) => {
     // Verifique se já existe um professor com o mesmo e-mail
     const existingProfessor = await Professores.findOne({ where: { email: req.body.email } });
     if (existingProfessor) {
@@ -219,18 +248,21 @@ app.post('/cad-professor', async (req, res) => {
         });
     }
 
-    //cria a senha
+    // Cria a senha
     const salt = await bcrypt.genSalt(15)
     const passwordHash = await bcrypt.hash(password, salt)
 
     req.body.password = passwordHash
+    if (req.file) {
+        req.body.foto = `http://localhost:8080/${req.file.path}`
+    }
+
 
     // Se não existir, crie um novo professor
     await Professores.create(req.body).then(() => {
         return res.json({
             erro: false,
             mensagem: "Professor cadastrado com sucesso!",
-            professor: req.body
         });
     })
         .catch(() => {
@@ -242,20 +274,40 @@ app.post('/cad-professor', async (req, res) => {
 });
 
 
-app.put('/edit-professor/:id', async (req, res) => {
-    await Professores.update(req.body, { where: { 'id': req.params.id } }).then(() => {
+app.put('/edit-professor/:id', upload.single('foto'), async (req, res) => {
+    let { password } = req.body;
+
+    // Verifique se a senha tem mais de 6 dígitos
+    if (password.length <= 6) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: a senha deve ter mais de 6 dígitos!",
+        });
+    }
+
+    // Aqui você pode editar a senha antes de criptografar
+    const senhaCriptografada = await bcrypt.hash(password, 15);
+
+    // Verifique se uma nova foto foi enviada
+    if (req.file) {
+        req.body.foto = `http://localhost:8080/${req.file.path}`;
+    }
+
+    await Professores.update({ ...req.body, password: senhaCriptografada }, { where: { 'id': req.params.id } }).then(() => {
         return res.json({
             erro: false,
-            mensagem: "professor editado com sucesso!",
+            mensagem: "Professor editado com sucesso!",
         });
     })
         .catch(() => {
             return res.status(400).json({
                 erro: true,
-                mensagem: "Erro: professor não editado com sucesso!",
+                mensagem: "Erro: Professor não editado com sucesso!",
             });
         });
-})
+});
+
+
 
 app.delete('/delete-professor/:id', async (req, res) => {
     await Professores.destroy({ where: { 'id': req.params.id } }).then(() => {

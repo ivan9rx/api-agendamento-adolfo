@@ -19,7 +19,11 @@ const Professores = db.define('professores', {
     password: {
         type: Sequelize.STRING,
         allowNull: false
-    }
+    },
+    foto: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
 })
 
 
