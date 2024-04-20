@@ -115,6 +115,24 @@ app.post('/cad-professor', async (req, res) => {
         });
     }
 
+    const { nome, email, password } = req.body;
+
+    // Verifique se todos os campos foram preenchidos
+    if (!nome || !email || !password) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Todos os campos devem ser preenchidos!",
+        });
+    }
+
+    // Verifique se a senha tem pelo menos 6 dígitos
+    if (password.length < 6) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: A senha deve ter pelo menos 6 dígitos!",
+        });
+    }
+
     // Se não existir, crie um novo professor
     await Professores.create(req.body).then(() => {
         return res.json({

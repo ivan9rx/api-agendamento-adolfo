@@ -59,6 +59,29 @@ Agendamentos.afterCreate((agendamento, options) => {
         .catch(err => console.log(err));
 });
 
+// Gancho afterDestroy para lidar com a exclusão de um agendamento
+Agendamentos.afterDestroy((agendamento, options) => {
+    Equipamentos.findByPk(agendamento.equipamentoId)
+        .then(equipamento => {
+            equipamento.quantidade += 1;
+            return equipamento.save();
+        })
+        .catch(err => console.log(err));
+});
+
+// Gancho afterUpdate para lidar com a alteração dos campos 'finished' ou 'canceled'
+Agendamentos.afterUpdate((agendamento, options) => {
+    if (agendamento.changed('finished') || agendamento.changed('canceled')) {
+        Equipamentos.findByPk(agendamento.equipamentoId)
+            .then(equipamento => {
+                equipamento.quantidade += 1;
+                return equipamento.save();
+            })
+            .catch(err => console.log(err));
+    }
+});
+
+
 
 
 
