@@ -35,6 +35,10 @@ app.use(express.json())
 
 
 
+app.get('/', (req,res) => {
+    res.send('api funcionando')
+})
+
 //rota privada
 app.get('/professor/:id', checkToken, async (req, res) => {
     const id = req.params.id
