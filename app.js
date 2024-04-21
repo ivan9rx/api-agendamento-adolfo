@@ -28,14 +28,15 @@ const { where, Model } = require('sequelize')
 
 const Sequelize = require('sequelize')
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const { profile } = require('console');
 
 app.use(cors())
 app.use(express.json())
 
 
 
-app.get('/', (req,res) => {
+app.get('/', (req, res) => {
     res.send('api funcionando')
 })
 
@@ -331,11 +332,19 @@ app.delete('/delete-professor/:id', async (req, res) => {
 
 app.post('/criar-agendamento', async (req, res) => {
     // Verifique se já existe um agendamento com a mesma data e horário
-    const existingAgendamento = await Agendamentos.findOne({ where: { data: req.body.data, aula: req.body.aula } });
+    const existingAgendamento = await Agendamentos.findOne({ where: { data: req.body.data, aula: req.body.aula, professorId: req.body.professorId, equipamentoId: req.body.equipamentoId } });
     if (existingAgendamento) {
         return res.status(400).json({
             erro: true,
             mensagem: "Erro: Já existe um agendamento para esta data e horário!",
+        });
+    }
+
+    const equipamento = await Equipamentos.findByPk(req.body.equipamentoId);
+    if (equipamento.quantidade === 0) {
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Não há equipamentos disponíveis para agendamento!",
         });
     }
 
@@ -377,23 +386,14 @@ app.get('/agendamentos', async (req, res) => {
 
 
 app.get('/agendamentos/professor/:id', async (req, res) => {
-
-    const agendamentoEquipamento = await Agendamentos.findAll({ where: { professorId: req.params.id }, include: [{ model: Equipamentos }] })
+    const agendamentoEquipamento = await Agendamentos.findAll({
+        where: { professorId: req.params.id },
+        include: [
+            { model: Equipamentos },
+            { model: Professores } // Inclua o modelo Professores aqui
+        ]
+    })
     return res.json(agendamentoEquipamento)
-    // await Professores.findAll({
-    //     where: { id: req.params.id },
-    //     include: [{ model: Agendamentos }]
-    // }).then((data) => {
-    //     return res.json({
-    //         erro: false,
-    //         data
-    //     })
-    // }).catch(() => {
-    //     return res.status(400).json({
-    //         erro: true,
-    //         mensagem: "erro ao buscar dados",
-    //     });
-    // });
 })
 
 app.listen(8080, () => { console.log('rodando') })
