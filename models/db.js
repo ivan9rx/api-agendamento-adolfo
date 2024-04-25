@@ -1,9 +1,8 @@
 const Sequelize = require("sequelize");
-require('dotenv').config()
-const sequelize = new Sequelize('agendamentos', 'avnadmin', 'AVNS_Yy7iU-jbI_H-KGiejIB', {
-  host: 'clinica-database-clinica-odontologica.a.aivencloud.com',
+const sequelize = new Sequelize('agendamentos', 'root', '', {
+  host: 'localhost',
   dialect: 'mysql',
-  port: 20893
+  port: 3306
 });
 
 sequelize
