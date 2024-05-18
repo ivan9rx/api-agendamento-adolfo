@@ -1,8 +1,8 @@
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize('agendamentos', 'root', '', {
-  host: 'localhost',
+const sequelize = new Sequelize('afs', 'avnadmin', 'AVNS_Yy7iU-jbI_H-KGiejIB', {
+  host: 'clinica-database-clinica-odontologica.a.aivencloud.com',
   dialect: 'mysql',
-  port: 3306
+  port: 20893
 });
 
 sequelize
